@@ -1,4 +1,19 @@
 valid = True
+slected = (-1,-1)
+cell_size = 50
+row = 9
+col = 9
+user_input = [
+    [0, 0, 0, 0, 0, 0, 0, 0, 0], 
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],    
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0]
+         ]
 board =  [
     [5, 3, 0, 0, 7, 0, 0, 0, 0],
     [6, 0, 0, 1, 9, 5, 0, 0, 0],
@@ -12,14 +27,14 @@ board =  [
 ]
 
 def setup():
-    size(500,800)
+    size(col*cell_size,row*cell_size)
     textAlign(CENTER, CENTER)
     textSize(16)
 
 def draw():
     background(255)
     sudokutable()
-    drawnum(board)
+    drawnum()
     
     
 def sudokutable():
@@ -28,24 +43,27 @@ def sudokutable():
     while i < 9:
         j=0
         while j < 9:
-            rect(width/11+(j)*width/11,height-(17-i)*width/11,width/11,width/11)
+            strokeWeight(2)
+            rect(j*cell_size, i* cell_size, cell_size, cell_size)
             j+=1
         i+=1
         
-def drawnum(bo):
+def drawnum():
     textSize(16)
     fill(0,0,0)
     m = 0
-    while m < 9:
+    while m < row:
         n = 0
-        while n < 9:
-            num = bo[m][n]
-            if num == 0:
-                num = ' '
-            text(str(num), width/11+(n)*width/11+width/22, height-(17-m)*width/11+0.5*width/11)
+        while n < col:
+            num = ' '
+            if board[m][n] != 0:
+                num = board[m][n]
+            elif user_input[m][n] != 0:
+                num = user_input[m][n]
+            
+            text(str(num), n*cell_size + cell_size/2, m*cell_size + cell_size/2)
             n+=1
         m+=1
-    
-    
+
     
     
