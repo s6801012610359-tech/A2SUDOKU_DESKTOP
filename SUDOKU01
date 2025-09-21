@@ -161,11 +161,6 @@ def mousePressed():
 def set_select(a, b):
     global selected
     selected = (a, b)
-t[m][n]
-            
-            text(str(num), n*cell_size + cell_size/2, m*cell_size + cell_size/2)
-            n+=1
-        m+=1
 
     
     
