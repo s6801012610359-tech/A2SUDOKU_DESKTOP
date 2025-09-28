@@ -1,10 +1,11 @@
 valid = True
-selected = (-1,-1)
+selected = (-1, -1)
 selected_num = 0
 cell_size = 50
 row = 9
 col = 9
-board =  [
+
+board = [
     [5, 3, 0, 0, 7, 0, 0, 0, 0],
     [6, 0, 0, 1, 9, 5, 0, 0, 0],
     [0, 9, 8, 0, 0, 0, 0, 6, 0],
@@ -15,10 +16,14 @@ board =  [
     [0, 0, 0, 4, 1, 9, 0, 0, 5],
     [0, 0, 0, 0, 8, 0, 0, 7, 9]
 ]
-padx0 = 10*cell_size
-pady0 = 4*cell_size
+
+original_board = [r[:] for r in board]
+
+padx0 = 10 * cell_size
+pady0 = 4 * cell_size
+
 def setup():
-    size((col+5)*cell_size,(row+2)*cell_size)
+    size((col + 5) * cell_size, (row + 2) * cell_size)
     textAlign(CENTER, CENTER)
     textSize(16)
 
@@ -29,119 +34,145 @@ def draw():
     drawnum()
     highlight_sqr()
     seperate_boxes()
-    
-    
+
 def sudokutable():
     fill(255)
     stroke(0)
     i = 0
     while i < 9:
-        j=0
+        j = 0
         while j < 9:
             strokeWeight(2)
-            rect(2+j*cell_size, 2+i* cell_size, cell_size, cell_size)
-            j+=1
-        i+=1
-        
+            rect(2 + j * cell_size, 2 + i * cell_size, cell_size, cell_size)
+            j += 1
+        i += 1
+
 def drawnum():
     textSize(16)
-    fill(0,0,0)
     m = 0
     while m < row:
         n = 0
         while n < col:
-            num = ' '
-            if board[m][n] != 0:
-                num = board[m][n]
-            text(str(num), 2+n*cell_size + cell_size/2, m*cell_size+2 + cell_size/2)
-            n+=1
-        m+=1
+            num = board[m][n]
+            if num != 0:
+                if original_board[m][n] != 0:
+                    fill(0)          
+                else:
+                    fill(0, 0, 255)  
+                text(str(num),
+                     2 + n * cell_size + cell_size / 2,
+                     2 + m * cell_size + cell_size / 2)
+            n += 1
+        m += 1
+
 def seperate_boxes():
+    #make each boxes seperate
     stroke(0)
     i = 0
     while i <= 3:
         strokeWeight(5)
-        line(2+3*i*cell_size, 2, 2+3*i*cell_size, 2+9*cell_size)
-        i+=1
-        
+        line(2 + 3 * i * cell_size, 2, 2 + 3 * i * cell_size, 2 + 9 * cell_size)
+        i += 1
     i = 0
     while i <= 3:
         strokeWeight(5)
-        line(2, 3*i*cell_size+2, 2+9*cell_size, 2+3*i*cell_size)
-        i+=1
-    
-    
-    
+        line(2, 2 + 3 * i * cell_size, 2 + 9 * cell_size, 2 + 3 * i * cell_size)
+        i += 1
+
 def draw_botton():
     global padx0, pady0, selected_num
     stroke(0)
     numbot = 1
     i = 0
+    #draw 1-9 
     while i < 3:
         j = 0
         while j < 3:
-            pos_x = padx0 + cell_size*j + 5*j   
-            pos_y = pady0 + cell_size*i + 5*i   
+            pos_x = padx0 + cell_size * j + 5 * j
+            pos_y = pady0 + cell_size * i + 5 * i
             if selected_num == numbot:
-                fill(180,220,255)
+                fill(180, 220, 255)
             else:
                 noFill()
             strokeWeight(2)
             rect(pos_x, pos_y, cell_size, cell_size)
             fill(0)
-            text(str(numbot), pos_x + cell_size/2, pos_y + cell_size/2)
+            text(str(numbot), pos_x + cell_size / 2, pos_y + cell_size / 2)
             numbot += 1
             j += 1
         i += 1
-    noFill()
-    rect(padx0,  pady0 + 3*cell_size+15, cell_size, cell_size)
+    if selected_num == 0:
+        fill(180, 220, 255)
+    else:
+        noFill()
+    rect(padx0, pady0 + 3 * cell_size + 15, cell_size, cell_size)
     fill(0)
-    text("ERASE", padx0 + cell_size/2, pady0 + 3*cell_size+15 + cell_size/2)
+    text("ERASE", padx0 + cell_size / 2, pady0 + 3 * cell_size + 15 + cell_size / 2)
 
-
-
+#click function
 def mousePressed():
-    global selected, selected_num
+    global selected, selected_num, board
     i = 0
     num = 1
+    #create loop to read what botton you pressed 
     while i < 3:
         j = 0
         while j < 3:
-            bx = padx0 + cell_size*j + 5*j
-            by = pady0 + cell_size*i + 5*i
+            bx = padx0 + cell_size * j + 5 * j
+            by = pady0 + cell_size * i + 5 * i
             if bx <= mouseX <= bx + cell_size and by <= mouseY <= by + cell_size:
-                selected_num = 0 if selected_num == num else num 
+                #if you press botton again it set select num to 0 aka erase
+                selected_num = 0 if selected_num == num else num
                 selected = (-1, -1)
                 return
             num += 1
             j += 1
         i += 1
-
+    
+    #check if botton = erase then in put = 0
     ex = padx0
-    ey = pady0 + 3*cell_size + 15
+    ey = pady0 + 3 * cell_size + 15
     if ex <= mouseX <= ex + cell_size and ey <= mouseY <= ey + cell_size:
         selected_num = 0
         selected = (-1, -1)
         return
 
-    if mouseX < 2 or mouseY < 2 or mouseX >= 2 + col*cell_size or mouseY >= 2 + row*cell_size:
+    if mouseX < 2 or mouseY < 2 or mouseX >= 2 + col * cell_size or mouseY >= 2 + row * cell_size:
         selected = (-1, -1)
         return
+
     ro = int((mouseY - 2) // cell_size)
     co = int((mouseX - 2) // cell_size)
     if 0 <= ro < row and 0 <= co < col:
-        selected = (ro, co)
-        selected_num = 0 
+        #check if it original board problem
+        if original_board[ro][co] == 0:
+            selected = (ro, co)
+            if selected_num > 0:
+                board[ro][co] = selected_num
+            else:
+                board[ro][co] = 0
+        else:
+            selected = (-1, -1)
     else:
         selected = (-1, -1)
 
 def highlight_sqr():
-    ro,co = selected
+    ro, co = selected
     if ro < 0 or co < 0:
         return
     if ro >= row or co >= col:
         return
     noStroke()
     fill(255, 230, 120, 120)
-    rect(2 + co*cell_size, 2 + ro*cell_size, cell_size, cell_size)  
+    rect(2 + co * cell_size, 2 + ro * cell_size, cell_size, cell_size)
 
+#input function
+def keyPressed():
+    global board
+    ro, co = selected
+    if 0 <= ro < row and 0 <= co < col:
+        if original_board[ro][co] == 0:
+            if '1' <= key <= '9':
+                board[ro][co] = int(key)
+            elif key == '0' or key == BACKSPACE or key == DELETE:
+                board[ro][co] = 0
