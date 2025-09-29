@@ -19,13 +19,82 @@ board = [
 
 original_board = [r[:] for r in board]
 
+# Will hold the solved puzzle computed from original_board
+solved_board = None
+
 padx0 = 10 * cell_size
 pady0 = 4 * cell_size
 
+# ---------------- Sudoku solver (backtracking) ----------------
+def find_empty_cell(mat):
+    i = 0
+    while i < 9:
+        j = 0
+        while j < 9:
+            if mat[i][j] == 0:
+                return (i, j)
+            j += 1
+        i += 1
+    return None
+#Check row, column, and 3x3 box constraints for placing val at (r,c)
+def is_valid_placement(mat, r, c, val):
+    # Row
+    j = 0
+    while j < 9:
+        if mat[r][j] == val:
+            return False
+        j += 1
+    # Col
+    i = 0
+    while i < 9:
+        if mat[i][c] == val:
+            return False
+        i += 1
+    # 3x3 box
+    br = (r // 3) * 3
+    bc = (c // 3) * 3
+    i = 0
+    while i < 3:
+        j = 0
+        while j < 3:
+            if mat[br + i][bc + j] == val:
+                return False
+            j += 1
+        i += 1
+    return True
+#Returns True when solved
+def solve_with_backtracking(mat):
+    empty = find_empty_cell(mat)
+    if empty is None:
+        return True  # solved
+    r, c = empty
+    n = 1
+    while n <= 9:
+        if is_valid_placement(mat, r, c, n):
+            mat[r][c] = n
+            if solve_with_backtracking(mat):
+                return True
+            mat[r][c] = 0
+        n += 1
+    return False
+#Make a solved copy of original_board (without touching original)
+def solved_copy_from_original():
+    temp = [row[:] for row in original_board]
+    ok = solve_with_backtracking(temp)
+    if ok:
+        return temp
+    else:
+        # If unsolvable, still return something to avoid None errors
+        return [[0]*9 for _ in range(9)]
+
+# ---------------- Processing lifecycle ----------------
 def setup():
+    global solved_board
     size((col + 5) * cell_size, (row + 2) * cell_size)
     textAlign(CENTER, CENTER)
     textSize(16)
+    # Compute the solved board once at startup
+    solved_board = solved_copy_from_original()
 
 def draw():
     background(255)
@@ -34,7 +103,9 @@ def draw():
     drawnum()
     highlight_sqr()
     seperate_boxes()
+    draw_status_banner()
 
+# ---------------- Drawing helpers ----------------
 def sudokutable():
     fill(255)
     stroke(0)
@@ -48,6 +119,9 @@ def sudokutable():
         i += 1
 
 def drawnum():
+    # Render numbers with color logic:
+    # - original puzzle: black
+    # - user numbers: green if correct , red if incorrect
     textSize(16)
     m = 0
     while m < row:
@@ -56,9 +130,13 @@ def drawnum():
             num = board[m][n]
             if num != 0:
                 if original_board[m][n] != 0:
-                    fill(0)          
+                    fill(0)  # given clue
                 else:
-                    fill(0, 0, 255)  
+                    # user input: compare with solution
+                    if solved_board and num == solved_board[m][n]:
+                        fill(0, 170, 0)  # correct -> green
+                    else:
+                        fill(220, 0, 0)  # incorrect -> red
                 text(str(num),
                      2 + n * cell_size + cell_size / 2,
                      2 + m * cell_size + cell_size / 2)
@@ -66,7 +144,7 @@ def drawnum():
         m += 1
 
 def seperate_boxes():
-    #make each boxes seperate
+    # Bold lines around 3x3 boxes
     stroke(0)
     i = 0
     while i <= 3:
@@ -80,11 +158,12 @@ def seperate_boxes():
         i += 1
 
 def draw_botton():
+    # Number pad 1..9 + ERASE
     global padx0, pady0, selected_num
     stroke(0)
     numbot = 1
     i = 0
-    #draw 1-9 
+    # draw 1-9
     while i < 3:
         j = 0
         while j < 3:
@@ -109,27 +188,51 @@ def draw_botton():
     fill(0)
     text("ERASE", padx0 + cell_size / 2, pady0 + 3 * cell_size + 15 + cell_size / 2)
 
-#click function
+def draw_status_banner():
+    if not solved_board:
+        return
+    correct = 0
+    total_filled = 0
+    r = 0
+    while r < 9:
+        c = 0
+        while c < 9:
+            if board[r][c] != 0:
+                total_filled += 1
+                if board[r][c] == solved_board[r][c]:
+                    correct += 1
+            c += 1
+        r += 1
+    msg = ""
+    if board == solved_board:
+        msg = "Solved! "
+    else:
+        msg = "Filled: %d  |  Correct: %d" % (total_filled, correct)
+    fill(0)
+    textSize(18)
+    text(msg, (2 + 9 * cell_size) / 2, 2 + 9 * cell_size + 20)
+
+# ---------------- Interaction ----------------
 def mousePressed():
     global selected, selected_num, board
     i = 0
     num = 1
-    #create loop to read what botton you pressed 
+    # check number pad
     while i < 3:
         j = 0
         while j < 3:
             bx = padx0 + cell_size * j + 5 * j
             by = pady0 + cell_size * i + 5 * i
             if bx <= mouseX <= bx + cell_size and by <= mouseY <= by + cell_size:
-                #if you press botton again it set select num to 0 aka erase
+                # toggle select: press same button again -> erase mode
                 selected_num = 0 if selected_num == num else num
                 selected = (-1, -1)
                 return
             num += 1
             j += 1
         i += 1
-    
-    #check if botton = erase then in put = 0
+
+    # erase button
     ex = padx0
     ey = pady0 + 3 * cell_size + 15
     if ex <= mouseX <= ex + cell_size and ey <= mouseY <= ey + cell_size:
@@ -137,6 +240,7 @@ def mousePressed():
         selected = (-1, -1)
         return
 
+    # click inside grid?
     if mouseX < 2 or mouseY < 2 or mouseX >= 2 + col * cell_size or mouseY >= 2 + row * cell_size:
         selected = (-1, -1)
         return
@@ -144,7 +248,7 @@ def mousePressed():
     ro = int((mouseY - 2) // cell_size)
     co = int((mouseX - 2) // cell_size)
     if 0 <= ro < row and 0 <= co < col:
-        #check if it original board problem
+        # editable only if it wasn't a given clue
         if original_board[ro][co] == 0:
             selected = (ro, co)
             if selected_num > 0:
@@ -166,8 +270,8 @@ def highlight_sqr():
     fill(255, 230, 120, 120)
     rect(2 + co * cell_size, 2 + ro * cell_size, cell_size, cell_size)
 
-#input function
 def keyPressed():
+    # Keyboard input also respects original clues and updates color automatically
     global board
     ro, co = selected
     if 0 <= ro < row and 0 <= co < col:
